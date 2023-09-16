@@ -1,0 +1,30 @@
+server:
+  port: 8081
+spring:
+  profiles:
+    active: dev-embedded
+---
+mqtt:
+  server:
+    ip: tcp://tom.uib.es
+    port: 1883
+spring:
+  profiles: dev-embedded
+  h2:
+    console:
+      enabled: 'true'
+  datasource:
+    url: jdbc:h2:mem:test
+    username: sa
+    password: password
+    driverClassName: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: update
+    show-sql=:  true
+welcome:
+  message: Welcome to my Application Dev Envioroment wit Embedded DB
+
+
