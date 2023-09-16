@@ -1,23 +1,18 @@
 package com.ago.iotapp.web.mqtt;
-
-import com.ago.iotapp.web.entity.Device;
+import com.ago.iotapp.web.mqtt.models.DeviceTopic;
 import com.ago.iotapp.web.mqtt.models.TopicObject;
-import com.ago.iotapp.web.service.DeviceService;
+import com.ago.iotapp.web.service.IDeviceService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.eclipse.paho.client.mqttv3.*;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,7 +20,7 @@ public class BackgroundMqttService {
     private static final Logger LOGGER = LoggerFactory.getLogger(BackgroundMqttService.class);
 
     @Autowired
-    private DeviceService deviceService;
+    private IDeviceService deviceService;
     @Autowired
     private TopicObject topicObject;
     @Autowired
@@ -40,11 +35,11 @@ public class BackgroundMqttService {
     @PostConstruct
     public void initialize() {
         try {
-            CompletableFuture<List<Device>> devicesFuture = deviceService.getAllAsync();
+            CompletableFuture<List<DeviceTopic>> devicesFuture = deviceService.getAllAsyncForTopic();
             CompletableFuture<Void> connectionFuture = mqttConnectAsync();
 
             connectionFuture.thenAccept(result -> {
-                List<Device> devices = devicesFuture.join();
+                List<DeviceTopic> devices = devicesFuture.join();
                 if (!devices.isEmpty()) {
                     List<String> topics = devices.stream()
                             .map(device -> {

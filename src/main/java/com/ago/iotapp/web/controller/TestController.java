@@ -1,38 +1,41 @@
 package com.ago.iotapp.web.controller;
 
 import com.ago.iotapp.web.dto.AddDeviceRequestDto;
-import com.ago.iotapp.web.entity.Device;
-import com.ago.iotapp.web.mqtt.BackgroundMqttService;
+import com.ago.iotapp.web.model.DeviceModel;
+import com.ago.iotapp.web.mqtt.event.NewDeviceAddEvent;
+import com.ago.iotapp.web.mqtt.models.DeviceTopic;
 import com.ago.iotapp.web.mqtt.models.TopicObject;
-import com.ago.iotapp.web.service.DeviceService;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.ago.iotapp.web.service.IDeviceService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.validation.Valid;
+
 @Controller
 public class TestController {
     @Autowired
-    private DeviceService deviceService;
+    private IDeviceService deviceService;
     @Autowired
-    private BackgroundMqttService backgroundMqttService;
+    private ApplicationEventPublisher publisher;
     @Autowired
     private TopicObject topicObject;
     @Autowired
     private ModelMapper mapper;
     @PostMapping("api/test/mqtt")
-    public ResponseEntity<Device>addDevice(@RequestBody AddDeviceRequestDto request)
+    public ResponseEntity<DeviceModel>addDevice(@RequestBody AddDeviceRequestDto request)
     {
-        Device device=mapper.map(request,Device.class);
+        System.out.println(request.toString());
+        DeviceModel device=mapper.map(request, DeviceModel.class);
+        device.setEnabled(true);//to be removed
         deviceService.saveDevice(device);
-
-        try {
-            backgroundMqttService.addSubscription(topicObject.objectAsTopic(device));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+        if(device.isEnabled())
+        {
+            publisher.publishEvent(new NewDeviceAddEvent(this,mapper.map(device, DeviceTopic.class)));
         }
         return ResponseEntity.ok(device);
     }
