@@ -12,18 +12,13 @@ import javax.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "DeviceRecord")
 public class DeviceRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long recordId;
-    @ManyToOne(
-            cascade = CascadeType.ALL,
-            fetch = FetchType.LAZY
-    )
-    @JoinColumn(
-            name="device_id",
-            referencedColumnName = "deviceId"
-    )
-    public Device device;
+    private Long recordId;
+    private String lastRecord;
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "device_id", referencedColumnName = "deviceId")
+    private Device device;
 }
+

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -25,11 +26,16 @@ public class Device {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long deviceId;
     private String name;
-    @Column(name = "serial_number")
+    @Column(name = "serial_number",
+    unique = true)
     private String serialNumber;
     @Enumerated(EnumType.STRING)
     public DeviceDataType dataType;
     private boolean enabled=false;
     @OneToMany(mappedBy = "device")
-    List<DeviceRecord> records;
+    List<DeviceRecord> deviceRecords;
+    public void addRecord(DeviceRecord record){
+        if(deviceRecords == null) deviceRecords = new ArrayList<>();
+        deviceRecords.add(record);
+    }
 }

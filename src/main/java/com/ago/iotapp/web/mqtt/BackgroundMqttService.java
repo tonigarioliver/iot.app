@@ -1,12 +1,15 @@
 package com.ago.iotapp.web.mqtt;
+
+import com.ago.iotapp.web.mqtt.event.NewMqttMessageReceivedEvent;
 import com.ago.iotapp.web.mqtt.models.DeviceTopic;
-import com.ago.iotapp.web.mqtt.models.TopicObject;
+import com.ago.iotapp.web.mqtt.models.MappingJSON;
 import com.ago.iotapp.web.service.IDeviceService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.eclipse.paho.client.mqttv3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -22,13 +25,15 @@ public class BackgroundMqttService {
     @Autowired
     private IDeviceService deviceService;
     @Autowired
-    private TopicObject topicObject;
+    private MappingJSON mappingJSON;
     @Autowired
     private MqttTopicManager topicManager;
     @Autowired
     private MqttClient mqttClient;
     @Autowired
     private MqttConnectOptions mqttConnectOptions;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     private MqttMessageHandler listener;
 
@@ -44,7 +49,7 @@ public class BackgroundMqttService {
                     List<String> topics = devices.stream()
                             .map(device -> {
                                 try {
-                                    return topicObject.objectAsTopic(device);
+                                    return mappingJSON.objectAsJSON(device);
                                 } catch (JsonProcessingException e) {
                                     LOGGER.error("Error al convertir objeto en JSON: " + e.getMessage(), e);
                                     return null;
@@ -91,7 +96,7 @@ public class BackgroundMqttService {
     }
 
     private void saveToDatabase(String topic, String message) {
-        // Implement the logic to save data to the database
+        eventPublisher.publishEvent(new NewMqttMessageReceivedEvent(this,topic,message));
     }
 
     public synchronized void removeSubscription(String topic) throws MqttException {

@@ -3,6 +3,7 @@ server:
 spring:
   profiles:
     active: dev-embedded
+    #active: dev
 ---
 mqtt:
   server:
@@ -22,9 +23,33 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     defer-datasource-initialization: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql=:  true
 welcome:
   message: Welcome to my Application Dev Envioroment wit Embedded DB
 
-
+---
+mqtt:
+  server:
+    ip: tcp://tom.uib.es
+    port: 1883
+spring:
+  profiles: dev
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: zeueggye
+    url: jdbc:postgresql://trumpet.db.elephantsql.com/zeueggye
+    password: mK0fkFMBFLJbAF92-n40bQfP4Jdkd6J0
+  sql:
+    init:
+      mode: always
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: create
+    show-sql=:  true
+welcome:
+  message: Welcome to my Application Dev Envioroment

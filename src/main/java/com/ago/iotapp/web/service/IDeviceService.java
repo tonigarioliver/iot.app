@@ -12,6 +12,8 @@ public interface IDeviceService {
     CompletableFuture<List<Device>> getAllAsync();
     @Async
     CompletableFuture<List<DeviceTopic>> getAllAsyncForTopic();
-
     void saveDevice(DeviceModel device);
+    Device findBySerialNumber(String serialNumber);
+
+    void save(Device existingDevice);
 }

@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
-public class DeviceServiceImpl implements IDeviceService {
+public class DeviceService implements IDeviceService {
     @Autowired
     private DeviceRepository deviceRepository;
     @Autowired
@@ -40,5 +40,15 @@ public class DeviceServiceImpl implements IDeviceService {
     @Override
     public void saveDevice(DeviceModel device) {
         deviceRepository.save(mapper.map(device,Device.class));
+    }
+
+    @Override
+    public Device findBySerialNumber(String serialNumber) {
+        return deviceRepository.findBySerialNumber(serialNumber);
+    }
+
+    @Override
+    public void save(Device existingDevice) {
+        deviceRepository.save(existingDevice);
     }
 }
