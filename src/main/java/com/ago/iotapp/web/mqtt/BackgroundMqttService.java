@@ -60,7 +60,6 @@ public class BackgroundMqttService {
 
                     topics.forEach(this::addSubscription);
                 }
-                addSubscription("pipo");
             }).exceptionally(exception -> {
                 LOGGER.error("Error en la conexión MQTT: " + exception.getMessage(), exception);
                 return null;
