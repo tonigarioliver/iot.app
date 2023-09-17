@@ -11,6 +11,9 @@ mqtt:
     port: 1883
 spring:
   profiles: dev-embedded
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
   h2:
     console:
       enabled: 'true'

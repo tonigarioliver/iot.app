@@ -5,6 +5,7 @@ import com.ago.iotapp.web.model.DeviceModel;
 import com.ago.iotapp.web.mqtt.event.NewDeviceAddEvent;
 import com.ago.iotapp.web.mqtt.models.DeviceTopic;
 import com.ago.iotapp.web.service.IDeviceService;
+import io.swagger.annotations.Api;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -12,8 +13,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
+@RequestMapping("/api")
+@Api(tags = "Controlador de Ejemplo")
 public class TestController {
     @Autowired
     private IDeviceService deviceService;
@@ -21,7 +25,7 @@ public class TestController {
     private ApplicationEventPublisher publisher;
     @Autowired
     private ModelMapper mapper;
-    @PostMapping("api/test/mqtt")
+    @PostMapping("/api/test/mqtt")
     public ResponseEntity<DeviceModel>addDevice(@RequestBody AddDeviceRequestDto request)
     {
         System.out.println(request.toString());

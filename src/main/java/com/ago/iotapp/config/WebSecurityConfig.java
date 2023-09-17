@@ -18,7 +18,8 @@ public class WebSecurityConfig {
             "/hello",
             "/**",
             "/h2-console/**",
-            "api/test/mqtt"
+            "/api/test/mqtt",
+            "/**"
     };
 
     @Bean
