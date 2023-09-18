@@ -1,5 +1,6 @@
 package com.ago.iotapp.web.service.impl;
 
+import com.ago.iotapp.web.dto.EnableDeviceDto;
 import com.ago.iotapp.web.entity.Device;
 import com.ago.iotapp.web.model.DeviceModel;
 import com.ago.iotapp.web.mqtt.models.DeviceTopic;
@@ -66,4 +67,13 @@ public class DeviceService implements IDeviceService {
     public void save(Device existingDevice) {
         deviceRepository.save(existingDevice);
     }
+
+    @Override
+    public DeviceModel enableDevice(EnableDeviceDto request) throws ItemNotFoundException {
+        Device device=findBySerialNumber(request.getSerialNumber());
+        device.setEnabled(request.isToEnable());
+        save(device);
+        return mapper.map(device,DeviceModel.class);
+    }
+
 }

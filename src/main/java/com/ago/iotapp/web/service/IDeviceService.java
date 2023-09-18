@@ -1,5 +1,6 @@
 package com.ago.iotapp.web.service;
 
+import com.ago.iotapp.web.dto.EnableDeviceDto;
 import com.ago.iotapp.web.entity.Device;
 import com.ago.iotapp.web.model.DeviceModel;
 import com.ago.iotapp.web.mqtt.models.DeviceTopic;
@@ -18,4 +19,7 @@ public interface IDeviceService {
     Device findBySerialNumber(String serialNumber) throws ItemNotFoundException;
 
     void save(Device existingDevice);
+
+    DeviceModel enableDevice(EnableDeviceDto request) throws ItemNotFoundException;
+
 }

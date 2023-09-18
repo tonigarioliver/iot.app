@@ -20,7 +20,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     @ExceptionHandler
     public ResponseEntity<ErrorMessage>ItemAlreadyExistsException(ItemAlreadyExists exception)
     {
-        ErrorMessage message = new ErrorMessage(HttpStatus.BAD_REQUEST,exception.getMessage());
+        ErrorMessage message = new ErrorMessage(HttpStatus.CONFLICT,exception.getMessage());
         return ResponseEntity.status(message.getStatus()).body(message);
     }
 }
