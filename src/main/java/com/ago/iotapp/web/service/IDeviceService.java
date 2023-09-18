@@ -3,6 +3,8 @@ package com.ago.iotapp.web.service;
 import com.ago.iotapp.web.entity.Device;
 import com.ago.iotapp.web.model.DeviceModel;
 import com.ago.iotapp.web.mqtt.models.DeviceTopic;
+import com.ago.iotapp.web.service.exception.ItemAlreadyExists;
+import com.ago.iotapp.web.service.exception.ItemNotFoundException;
 import org.springframework.scheduling.annotation.Async;
 
 import java.util.List;
@@ -12,8 +14,8 @@ public interface IDeviceService {
     CompletableFuture<List<Device>> getAllAsync();
     @Async
     CompletableFuture<List<DeviceTopic>> getAllAsyncForTopic();
-    void saveDevice(DeviceModel device);
-    Device findBySerialNumber(String serialNumber);
+    void saveNewDevice(DeviceModel device) throws ItemAlreadyExists;
+    Device findBySerialNumber(String serialNumber) throws ItemNotFoundException;
 
     void save(Device existingDevice);
 }
