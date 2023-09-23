@@ -1,5 +1,6 @@
-package com.ago.iotapp.web.mqtt;
+package com.ago.iotapp.websocket.service;
 
+import com.ago.iotapp.web.mqtt.MqttTopicManager;
 import com.ago.iotapp.web.mqtt.event.NewMqttMessageReceivedEvent;
 import com.ago.iotapp.web.mqtt.models.DeviceTopic;
 import com.ago.iotapp.web.mqtt.models.MappingJSON;
@@ -11,66 +12,46 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketMessage;
+import org.springframework.web.socket.WebSocketSession;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
-public class BackgroundMqttService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BackgroundMqttService.class);
-
-    @Autowired
-    private IDeviceService deviceService;
+public class MqttListenerService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MqttListenerService.class);
     @Autowired
     private MappingJSON mappingJSON;
     @Autowired
-    private MqttTopicManager topicManager;
+    private WebSocketTopicManager webSocketTopicManager;
     private MqttClient mqttClient;
     private MqttConnectOptions mqttConnectOptions;
     @Autowired
     private ApplicationEventPublisher eventPublisher;
-    private MqttMessageHandler listener;
-    @Autowired
-    public BackgroundMqttService(@Qualifier("mqttClientBackground") MqttClient mqttClientBackground,
-                                 @Qualifier("mqttClientBackgroundOptions") MqttConnectOptions mqttClientBackgroundOptions) {
-        this.mqttClient = mqttClientBackground;
-        this.mqttConnectOptions=mqttClientBackgroundOptions;
-    }
 
+    private MqttMessageHandler listener;
+    //@Autowired
+    //private SimpMessagingTemplate messagingTemplate;
+    @Autowired
+    public MqttListenerService(@Qualifier("mqttClientListener") MqttClient mqttClientListener,
+                                 @Qualifier("mqttClientListenerOptions") MqttConnectOptions mqttClientListenerOptions) {
+        this.mqttClient = mqttClientListener;
+        this.mqttConnectOptions=mqttClientListenerOptions;
+    }
     @PostConstruct
     public void initialize() {
-        try {
-            CompletableFuture<List<DeviceTopic>> devicesFuture = deviceService.getAllAsyncForTopic();
             CompletableFuture<Void> connectionFuture = mqttConnectAsync();
-
-            connectionFuture.thenAccept(result -> {
-                List<DeviceTopic> devices = devicesFuture.join();
-                if (!devices.isEmpty()) {
-                    List<String> topics = devices.stream()
-                            .map(device -> {
-                                try {
-                                    return mappingJSON.objectAsJSON(device);
-                                } catch (JsonProcessingException e) {
-                                    LOGGER.error("Error al convertir objeto en JSON: " + e.getMessage(), e);
-                                    return null;
-                                }
-                            })
-                            .filter(topic -> topic != null) // Filtra los temas nulos
-                            .collect(Collectors.toList());
-
-                    topics.forEach(this::addSubscription);
-                }
-            }).exceptionally(exception -> {
-                LOGGER.error("Error en la conexión MQTT: " + exception.getMessage(), exception);
-                return null;
-            });
-        } catch (Exception e) {
-            LOGGER.error("Error en la inicialización: " + e.getMessage(), e);
-        }
+            connectionFuture.join();
     }
 
     @Async
@@ -94,22 +75,30 @@ public class BackgroundMqttService {
             // Process the MQTT message and save it to the database
             String messagePayload = new String(message.getPayload());
             LOGGER.info(messagePayload);
-            saveToDatabase(topic, messagePayload);
+            sendToSubscriber(topic, messagePayload);
         }
     }
 
-    private void saveToDatabase(String topic, String message) {
-        eventPublisher.publishEvent(new NewMqttMessageReceivedEvent(this,topic,message));
+    private void sendToSubscriber(String topic, String message) throws IOException {
+        if(webSocketTopicManager.isTopicSubscribed(topic))
+        {
+            WebSocketSession session= webSocketTopicManager.getSessionameByTopic(topic);
+            session.sendMessage(new TextMessage("Received " + message + " !"));
+        }
     }
 
     public synchronized void removeSubscription(String topic) throws MqttException {
-        topicManager.remove(topic);
+        if(webSocketTopicManager.isTopicSubscribed(topic))
+        {
+            mqttClient.unsubscribe(topic);
+            webSocketTopicManager.deleteTopic(topic);
+        }
         mqttClient.unsubscribe(topic);
     }
 
-    public synchronized void addSubscription(String topic) {
+    public synchronized void addSubscription(WebSocketSession session,String topic) {
         LOGGER.info("New topic added: " + topic);
-        topicManager.addTopic(topic);
+        webSocketTopicManager.addTopic(topic,session);
         try {
             mqttClient.subscribe(topic, listener);
         } catch (MqttException e) {
